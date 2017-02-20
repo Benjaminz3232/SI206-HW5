@@ -55,20 +55,55 @@ api = tweepy.API(auth, parser=tweepy.parsers.JSONParser()) # Set up library to g
 
 
 
-f = "twitter_cache.json"
+CACHE_FNAME = "TWITTER_DATA.json"
 
 try:
-	cache_twitter_obj = open(f, 'r')
-	cache_contents = cache_twitter_obj.read()
-	cache_dict = json.loads(cache_contents)
-	cache_twitter_obj.close()
+    cache_file = open(CACHE_FNAME,'r') #reading the data from the cache file
+    cache_contents = cache_file.read() # get the data into a string
+    CACHE_DICTION = json.loads(cache_contents) #load that stuff info a dictionary
+    cache_file.close() # close that file when were done with it
+
 except:
-	cache_dict = {}
+
+    CACHE_DICTION = {} # if there is nothing there, make sure that CACHE_DICTION is empty!
+
+
+def get_twitter_data(search_request):
+    if search_request in CACHE_DICTION: #seeing if the search request is in the CACHE_DICTION
+        print ("\n" + "USING CACHED DATA FOR: " + search_request + "\n") #print a nice message
+        twitter_search_results = CACHE_DICTION[search_request] 
+
+    else:
+        
+        try:
+            print ("\n" +"GETTING NEW DATA FOR: " + search_request + "\n")
+            twitter_search_results = api.search(q=search_request)
+            CACHE_DICTION[search_request] = twitter_search_results 
+            cached_file = open(CACHE_FNAME,'w') 
+            cached_file.write(json.dumps(CACHE_DICTION, indent=2))
+            cached_file.close() #close the file
+
+        except: 
+            print ("There seems to have been a problem, try checking your network connection then try again")
+            exit()
+
+    return twitter_search_results #json object is returned from this function
 
 
 
+def run_program(): #function for running program
+    search_word = input("Enter your search query here: " + "\n") 
+    compiled_tweets = get_twitter_data(search_word) #make the twitter search using API or cached file
+    for a_tweet in compiled_tweets['statuses'][:3]: #getting 3 tweets
+        print ("TEXT: " + a_tweet['text']) #twitter text
+        print ("CREATED AT: " + a_tweet['created_at']) 
+        print("\n")
+
+
+run_program() 
 
 
 
-
-
+###########>>>>>>>> PLEASE READ <<<<<<<<<<<<<<#############
+# In my cached file, I searched up "Rocket League" and "University of Michigan" and "Vanoss Gaming"
+# When searching for "UMSI", the spacing in the terminal for some reason, but for everything else it's fine!!!
